@@ -1,0 +1,12 @@
+1 : (bftcosi.TestBftCoSi: 54) - TestBftCoSi
+1 : (bftcosi.TestBftCoSi: 60) - Simple count
+1 : (bftcosi.runProtocolOnceGo: 207) - Running BFTCoSi with 3 hosts
+1 : (bftcosi.runProtocolOnceGo: 213) - Tree is: Tree d06ff39e-1f18-5efd-9bbe-5b66f2563ac9 is:
+88c579cfdc2d68f78a10e051a9ba36fc1c25dac8fb15258c20d1f04fa7bb752d/local://127.0.0.1:2000 is root
+1 - bfb70eb95369da81955f2751e057d1679a5024708837fb85c30f0183217edcd5/local://127.0.0.1:2010 has parent 88c579cfdc2d68f78a10e051a9ba36fc1c25dac8fb15258c20d1f04fa7bb752d/local://127.0.0.1:2000
+1 - bfb2729ec074d813d86a6aadc92bd0a21fe597efd220f6781cdc82668e6cfd2b/local://127.0.0.1:2020 has parent 88c579cfdc2d68f78a10e051a9ba36fc1c25dac8fb15258c20d1f04fa7bb752d/local://127.0.0.1:2000
+1 : (bftcosi.runProtocolOnceGo: 233) - Added counter 0 0
+1 : (bftcosi.runProtocolOnceGo: 251) - Launched protocol
+1 : (bftcosi.TestBftCoSi: 62) - Simple count OK
+PASS
+ok  	github.com/dedis/cothority/bftcosi	0.135s
