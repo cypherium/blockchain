@@ -8,8 +8,8 @@ import (
 	gohash "hash"
 	"strconv"
 
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // HashFunc exports a hashfunction
@@ -193,7 +193,7 @@ type MerklePath struct {
 // validating the entire path in the process.
 // Returns a slice of a buffer obtained from HashGet.Get(),
 // which might be shared and should be considered read-only.
-func MerkleGet(suite cosi.Suite, root []byte, path MerklePath,
+func MerkleGet(suite network.Suite, root []byte, path MerklePath,
 	ctx HashGet) ([]byte, error) {
 
 	// Follow pointers through intermediate levels

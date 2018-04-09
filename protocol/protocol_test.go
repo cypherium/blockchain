@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cypherium_simulation/protocol"
+	"github.com/cypherium/blockchain/protocol"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

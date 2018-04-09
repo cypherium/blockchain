@@ -23,7 +23,7 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 
 	// Import your service:
-	_ "github.com/dedis/cypherium_simulation/service"
+	_ "github.com/cypherium/blockchain/service"
 	// Here you can import any other needed service for your conode.
 	// For example, if your service needs cosi available in the server
 	// as well, uncomment this:
@@ -48,7 +48,7 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 				}
-				app.InteractiveConfig(cothority.Suite, "cypherium_simulation")
+				app.InteractiveConfig(cothority.Suite, "blockchain")
 				return nil
 			},
 		},
@@ -68,7 +68,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: path.Join(cfgpath.GetConfigPath("cypherium_simulation"), app.DefaultServerConfig),
+			Value: path.Join(cfgpath.GetConfigPath("blockchain"), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}

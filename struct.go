@@ -5,6 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/cypherium/blockchain/blockchain/blkparser"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 )
@@ -14,6 +15,7 @@ func init() {
 	network.RegisterMessages(
 		Count{}, CountReply{},
 		Clock{}, ClockReply{},
+		Transaction{}, TransReply{},
 	)
 }
 
@@ -41,4 +43,24 @@ type Count struct {
 // CountReply returns the number of protocol-runs
 type CountReply struct {
 	Count int
+}
+
+var MagicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
+
+// ReadFirstNBlocks specifcy how many blocks in the the BlocksDir it must read
+// (so you only have to copy the first blocks to deterLab)
+const ReadFirstNBlocks = 400
+
+// Transaction will run the tepmlate-protocol on the roster and return
+// the result status.
+type Transaction struct {
+	Roster   *onet.Roster
+	TransMsg []blkparser.Tx
+}
+
+// TransReply return the result status.
+type TransReply struct {
+	Time     float64
+	Children int
+	Status   bool
 }

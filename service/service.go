@@ -11,8 +11,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/cypherium_private/cypherium_simulation"
-	"github.com/cypherium_private/cypherium_simulation/protocol"
+	"github.com/cypherium/blockchain"
+	"github.com/cypherium/blockchain/cypherium"
+	"github.com/cypherium/blockchain/protocol"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -35,6 +36,8 @@ type Service struct {
 	*onet.ServiceProcessor
 
 	storage *storage
+	// holds the sever as a struct
+	srv cypherium.BlockServer
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -47,6 +50,48 @@ type storage struct {
 	sync.Mutex
 }
 
+// Send starts a template-protocol and returns the result status.
+func (s *Service) Send(req *template.Transaction) (*template.TransReply, error) {
+	s.storage.Lock()
+	s.storage.Count++
+	s.storage.Unlock()
+	s.save()
+	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List)-1, s.ServerIdentity())
+	log.Lvl3("(s *Service) Send", s.ServiceID, tree.Dump())
+	if tree == nil {
+		return nil, errors.New("couldn't create tree")
+	}
+
+	for _, tr := range req.TransMsg {
+		// "send" transaction to server (we skip tcp connection on purpose here)
+		s.srv.AddTransaction(tr)
+	}
+
+	pi, err := s.CreateProtocol(cypherium.CypheriumProtocolName, tree)
+	if err != nil {
+		return nil, err
+	}
+
+	proto := pi.(*cypherium.TemplateProtocol)
+	root, err := s.srv.Instantiate(proto)
+	if err != nil {
+		return nil, err
+	}
+
+	root.CreateProtocol = func(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
+		return s.CreateProtocol(name, t)
+	}
+
+	start := time.Now()
+	pi.Start()
+	resp := &template.TransReply{
+		Children: <-root.ChildCount,
+	}
+	resp.Time = time.Now().Sub(start).Seconds()
+	resp.Status = true
+	return resp, nil
+}
+
 // Clock starts a template-protocol and returns the run-time.
 func (s *Service) Clock(req *template.Clock) (*template.ClockReply, error) {
 	s.storage.Lock()
@@ -54,6 +99,7 @@ func (s *Service) Clock(req *template.Clock) (*template.ClockReply, error) {
 	s.storage.Unlock()
 	s.save()
 	tree := req.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	log.Lvl3("(s *Service) Clock", s.ServiceID, tree.Dump())
 	if tree == nil {
 		return nil, errors.New("couldn't create tree")
 	}
@@ -125,12 +171,15 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.Clock, s.Count); err != nil {
+	if err := s.RegisterHandlers(s.Clock, s.Count, s.Send); err != nil {
 		return nil, errors.New("Couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, err
 	}
+
+	server := cypherium.NewCypheriumServer(8, 6000, 0)
+	s.srv = server
 	return s, nil
 }

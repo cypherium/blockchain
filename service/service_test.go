@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cypherium_simulation"
+	"github.com/cypherium/blockchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -17,10 +17,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_Clock(t *testing.T) {
+
+	log.SetDebugVisible(5)
+
 	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	hosts, roster, _ := local.GenTree(5, true)
+	hosts, roster, tree := local.GenTree(5, true)
+	log.Lvl3(tree.Dump())
 	defer local.CloseAll()
 
 	services := local.GetServices(hosts, templateID)
@@ -36,6 +40,9 @@ func TestService_Clock(t *testing.T) {
 }
 
 func TestService_Count(t *testing.T) {
+
+	log.SetDebugVisible(5)
+
 	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist

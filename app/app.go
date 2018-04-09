@@ -6,9 +6,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strconv"
 
-	template "github.com/dedis/cypherium_simulation"
+	template "github.com/cypherium/blockchain"
+	"github.com/cypherium/blockchain/blockchain"
+	"github.com/cypherium/blockchain/blockchain/blkparser"
 
 	"github.com/dedis/onet/app"
 
@@ -33,9 +37,23 @@ func main() {
 		{
 			Name:      "counter",
 			Usage:     "return the counter",
-			Aliases:   []string{"t"},
+			Aliases:   []string{"c"},
 			ArgsUsage: groupsDef,
 			Action:    cmdCounter,
+		},
+		{
+			Name:      "send",
+			Usage:     "send one transaction",
+			Aliases:   []string{"s"},
+			ArgsUsage: groupsDef,
+			Action:    sendTransaction,
+		},
+		{
+			Name:      "check",
+			Usage:     "tests if the block is already downloaded, else it will download it.",
+			Aliases:   []string{"ck"},
+			ArgsUsage: groupsDef,
+			Action:    ensureBlockIsAvailable,
 		},
 	}
 	cliApp.Flags = []cli.Flag{
@@ -50,6 +68,62 @@ func main() {
 		return nil
 	}
 	log.ErrFatal(cliApp.Run(os.Args))
+}
+
+func ensureBlockIsAvailable(c *cli.Context) error {
+	log.Info("Check command")
+	if c.NArg() != 1 {
+		log.Fatal("Please give the dir as argument,where to save the blocks")
+	}
+	dir := c.Args().First()
+	err := blockchain.EnsureBlockIsAvailable(dir)
+	if err != nil {
+		return errors.New("Couldn't get block: " + err.Error())
+	}
+	log.Infof("The block is already downloaded.")
+	return nil
+}
+
+func getTransactions(blocksPath string, nTxs int) ([]blkparser.Tx, error) {
+	log.Info("cypherium Client will trigger up to", nTxs, "transactions.", "blocks dir:", blocksPath)
+	parser, err := blockchain.NewParser(blocksPath, template.MagicNum)
+	if err != nil {
+		return nil, errors.New("Couldn't get transactions: " + err.Error())
+	}
+
+	transactions, err := parser.Parse(0, template.ReadFirstNBlocks)
+	if err != nil {
+		return nil, errors.New("Error while parsing transactions " + err.Error())
+	}
+	if len(transactions) == 0 {
+		return nil, fmt.Errorf("Couldn't read any transactions:%v", len(transactions))
+	}
+	if len(transactions) < nTxs {
+		return nil, fmt.Errorf("Read only %v but caller wanted %v", len(transactions), nTxs)
+	}
+	return transactions, nil
+}
+
+//sendTransaction send one transactions,return the result
+func sendTransaction(c *cli.Context) error {
+	log.Info("Send command")
+	if c.NArg() != 3 {
+		log.Fatal("Please give the dir as argument,where to save the blocks and give the transactions number as second argument")
+	}
+	dir := c.Args().Get(1)
+	nTxs, err := strconv.Atoi(c.Args().Get(2))
+	group := readGroup(c)
+	client := template.NewClient()
+	transactions, err := getTransactions(dir, nTxs)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Send(group.Roster, transactions[:nTxs])
+	if err != nil {
+		return errors.New("When asking the time: " + err.Error())
+	}
+	log.Infof("Children: %d - Time spent: %f.send result:%v", resp.Children, resp.Time, resp.Status)
+	return nil
 }
 
 // Returns the time needed to contact all nodes.
@@ -79,9 +153,9 @@ func cmdCounter(c *cli.Context) error {
 }
 
 func readGroup(c *cli.Context) *app.Group {
-	if c.NArg() != 1 {
-		log.Fatal("Please give the group-file as argument")
-	}
+	// if c.NArg() != 1 {
+	// 	log.Fatal("Please give the group-file as argument")
+	// }
 	name := c.Args().First()
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")

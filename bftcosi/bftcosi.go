@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cypherium_private/cypherium_simulation/cosi/crypto"
+	"github.com/cypherium/blockchain/cosi/crypto"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -125,8 +125,14 @@ type collectStructs struct {
 	tempCommitResponse []kyber.Scalar
 }
 
+// CreateProtocolFunction is a function type which creates a new protocol
+// used in FtCosi protocol for creating sub leader protocols.
+type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstance, error)
+
 // NewBFTCoSiProtocol returns a new bftcosi struct
 func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
+
+	log.LLvl5(n.Name(), "NewBFTCoSiProtocol")
 	// initialize the bftcosi node/protocol-instance
 	nodes := len(n.Tree().List())
 	bft := &ProtocolBFTCoSi{
@@ -137,7 +143,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
-		allowedExceptions:    nodes - (nodes+1)*2/3,
+		allowedExceptions:    (nodes - 1) / 3, //nodes - (nodes+1)*2/3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 		Timeout:              defaultTimeout,
@@ -328,7 +334,7 @@ func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 	// TODO this will not always work for non-star graphs
 	if len(bft.tempPrepareCommit) < len(bft.Children())-bft.allowedExceptions {
 		bft.signRefusal = true
-		log.Error("not enough prepare commitment messages")
+		log.Error("not enough prepare commitment messages", len(bft.tempPrepareCommit), len(bft.Children())-bft.allowedExceptions)
 	}
 
 	commitment := bft.prepare.Commit(bft.Suite().RandomStream(), bft.tempPrepareCommit)
@@ -411,7 +417,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		Exceptions: ch.Signature.Exceptions,
 	}
 	if err := bftPrepareSig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Error(bft.Name(), "Verification of the signature failed:", err)
+		log.Error(bft.Name(), "Verification of the signature failed:", err, bftPrepareSig, bft.Suite(), bft.Roster().Publics())
 		bft.signRefusal = true
 	}
 
@@ -486,9 +492,9 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 		Sig:        cosiSig,
 		Exceptions: bft.tempExceptions,
 	}
-
+	log.Lvl1(bft.Name(), "Verification of the signature status:", bft.Msg, sig, bft.Suite(), bft.Roster().Publics())
 	if err := sig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Error(bft.Name(), "Verification of the signature failed:", err)
+		log.Error(bft.Name(), "Verification of the signature failed:", err, sig, bft.Suite(), bft.Roster().Publics())
 		bft.signRefusal = true
 		return err
 	}
@@ -564,6 +570,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 
 // readCommitChan reads until all commit messages are received or a timeout for message type `t`
 func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error {
+	timeout := time.After(bft.Timeout)
 	for {
 		if bft.isClosing() {
 			return errors.New("Closing")
@@ -586,14 +593,19 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				}
 			case RoundCommit:
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children()) {
+				// In case the prepare round had some exceptions, we
+				// will not wait for more commits from the commit
+				// round. The possibility of having a different set
+				// of nodes failing in both cases is inferiour to the
+				// speedup in case of one node failing in both rounds.
+				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.tempPrepareCommit) {
 					return nil
 				}
 			}
-		case <-time.After(bft.Timeout):
+		case <-timeout:
 			// in some cases this might be ok because we accept a certain number of faults
 			// the caller is responsible for checking if enough messages are received
-			log.Lvl1("timeout while trying to read commit messages")
+			log.Lvl1("timeout while trying to read commit message")
 			return nil
 		}
 	}
@@ -601,6 +613,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 
 // should do nothing if the channel is closed
 func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) error {
+	timeout := time.After(bft.Timeout)
 	for {
 		if bft.isClosing() {
 			return errors.New("Closing")
@@ -620,16 +633,20 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 				bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
 				bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
 				bft.tempPrepareResponsePublics = append(bft.tempPrepareResponsePublics, from)
-				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.Children()) {
+				// There is no need to have more responses than we have
+				// commits. We _should_ check here if we get the same
+				// responses from the same nodes. But as this is deprecated
+				// and replaced by ByzCoinX, we'll leave it like that.
+				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.tempPrepareCommit) {
 					return nil
 				}
 			case RoundCommit:
 				bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
-				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.Children()) {
+				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.tempCommitCommit) {
 					return nil
 				}
 			}
-		case <-time.After(bft.Timeout):
+		case <-timeout:
 			log.Lvl1("timeout while trying to read response messages")
 			return nil
 		}
@@ -735,12 +752,12 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	// if we didn't get all the responses, add them to the exception
 	// 1, find children that are not in tempPrepareResponsePublics
 	// 2, for the missing ones, find the global index and then add it to the exception
-	publicsMap := make(map[kyber.Point]bool)
+	publicsMap := make(map[string]bool)
 	for _, p := range bft.tempPrepareResponsePublics {
-		publicsMap[p] = true
+		publicsMap[p.String()] = true
 	}
 	for _, tn := range bft.Children() {
-		if !publicsMap[tn.ServerIdentity.Public] {
+		if !publicsMap[tn.ServerIdentity.Public.String()] {
 			// We assume the server was also not available for the commitment
 			// so no need to subtract the commitment.
 			// Conversely, we cannot handle nodes which fail right
