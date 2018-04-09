@@ -1,4 +1,4 @@
-#Go implementation of the Cypherium protocol/service/app
+# Go implementation of the Cypherium protocol/service/app
 
 ## Overview
 This repo is the official Go implementation of the Cypherium protocols, services and apps. Cypherium is a highly scalable & permission-less hybrid blockchain platform based on proof-of-work and Byzantine fault tolerance consensus. For more information, see: https://www.cypherium.io
