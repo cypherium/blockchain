@@ -1,66 +1,22 @@
-[![Build Status](https://travis-ci.org/cypherium/blockchain.svg?branch=master)](https://travis-ci.org/cypherium/blockchain)
+#Go implementation of the Cypherium protocol/service/app
 
-# Template for a new cothority protocol/service/app
+## Overview
+This repo is the official Go implementation of the Cypherium protocols, services and apps. Cypherium is a highly scalable & permission-less hybrid blockchain platform based on proof-of-work and Byzantine fault tolerance consensus. For more information, see: https://www.cypherium.io
 
-Building on the ONet-library available at 
-https://github.com/dedis/onet, this
-repo holds templates to build the different parts necessary for a cothority
-addition:
+## How to run the MVP version of Cypherium locally
+To use the code of this package you need to:
 
-* protocol - define an ephemeral, distributed, decentralized protocol
-* service - create a long-term service that can spawn any number of protocols
-* app - write an app that will interact with, or spawn, a cothority
+-  Install [Golang](https://golang.org/doc/install)
+-  Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your Go workspace directory 
+-  Add `$(go env GOPATH)/bin` to `$PATH`
 
-This repo is geared towards PhD-students who want to add a new functionality to
-the cothority by creating their own protocols, services and apps.
+TODO
 
-## Starting
-
-You can go-get the repo, then start your project on a new branch. This allows
-you to follow the main cothority-template in case something needs to be
-updated. We suppose you already forked the cothority-template repo into your
-account at `yourlogin`.
-
-```bash
-go get -u github.com/cypherium_private/migration
-cd $(go env GOPATH)/src/github.com/cypherium_private/migration
-git remote add perso git@github.com/yourlogin/template
-git checkout -b my_new_project
-git push -u perso my_new_project
-```
-
-Now you can do all your development in `$(go env GOPATH)/src/github.com/cypherium_private/migration`
-until you are proficient enough to move it either to the main-repository at
-`dedis/cothority` or adjusting the paths and publish it under your own repo.
 
 ## Documentation
 
-You find more documentation on how to use the template on the wiki:
-[Cothority Template](https://github.com/cypherium_private/migration/wiki)
+You can find more documentation on the wiki:
+[Cypherium](https://github.com/cypherium/blockchain/wiki)
 
-More documentation and examples can be found at:
-- To run and use a conode, have a look at 
-	[Cothority Node](https://github.com/dedis/cothority/wiki)
-	with examples of protocols, services and apps
-- To participate as a core-developer, go to 
-	[Cothority Network Library](https://github.com/dedis/onet/wiki)
 
 ## License
-
-All repositories for the cothority are double-licensed under a 
-GNU/AGPL 3.0 and a commercial license. If you want to have more information, 
-contact us at dedis@epfl.ch.
-
-## Contribution
-
-If you want to contribute to Cothority-ONet, please have a look at 
-[CONTRIBUTION](https://github.com/dedis/cothority/blob/master/CONTRIBUTION) for
-licensing details. Once you are OK with those, you can have a look at our
-coding-guidelines in
-[Coding](https://github.com/dedis/Coding). In short, we use the github-issues
-to communicate and pull-requests to do code-review. Travis makes sure that
-everything goes smoothly. And we'd like to have good code-coverage.
-
-# Contact
-
-You can contact us at https://groups.google.com/forum/#!forum/cothority
