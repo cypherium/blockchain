@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cypherium/blockchain/blockchain"
+	"github.com/blockchain/blockchain"
 	"github.com/dedis/onet/log"
 )
 
@@ -57,9 +57,11 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 	}
 	consumed := nTxs
 	for consumed > 0 {
-		for _, tr := range transactions {
+		for i, _ := range transactions {
 			// "send" transaction to server (we skip tcp connection on purpose here)
-			c.srv.AddTransaction(tr)
+			//c.srv.AddTransaction(tr)
+			i++
+			break
 		}
 		consumed--
 	}

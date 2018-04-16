@@ -1,0 +1,121 @@
+/*
+ * Copyright (C) 2018 The Cypherium Blockchain authors
+ *
+ * This file is part of the Cypherium Blockchain library.
+ *
+ * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The Cypherium Blockchain library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+/*
+ *  Definition of the data structure
+ */
+
+syntax="proto3";
+package blockchain;
+
+// Accounts
+message Account {
+    uint32  Version = 1;
+    uint32  Type    = 2;   
+    bytes Address = 3;
+    uint32  Latency = 4;
+    bytes   Balance = 5; 
+    bytes   CodeHash = 6;
+    bytes   StgRoot  = 7;
+}
+
+message Transaction {
+    uint32     Version   = 1;
+    bytes     SenderKey = 3;
+    bytes    Recipient = 4;
+    bytes     Quantity  = 5;
+    bytes      Data      = 6;
+    uint64     AvailGas  = 7;
+    bytes     GasPrice  = 8;
+}
+
+message STransaction {
+    Transaction tx        = 1;
+    bytes       SenderSig = 2;
+}
+
+message Coinbase {
+    uint64  NumCommittee = 1;
+    bytes   Committee = 2;
+    bytes   Quantity = 3;
+}
+
+message TxBlockHdr {
+    uint32    Version       = 1;
+    uint32    Type          = 2;
+    bytes     GasLimit      = 3;
+    bytes     GasUsed       = 4;
+    bytes     KblkHash      = 5;
+    bytes     PblkHash      = 6;
+    bytes     PTblkHash     = 7;
+    uint64    Timestamp     = 8;
+    bytes     StateRoot     = 9;
+    bytes     TxRoot        = 10;
+    //TODO
+    //bytes     KblkNum       = 11;
+    //bytes     number        = 12;
+    //Hash      TxHashes      = 13;
+    //PubKey    Leader        = 14;
+}
+
+message TxBlockData {
+    uint32   StxCnt           = 9;
+    repeated STransaction Stx = 10;
+}
+
+message TxBlock {
+    TxBlockHdr  tbh           = 1;
+    TxBlockData tbd           = 2;
+    Coinbase    Coinbase      = 3;
+    bytes       KblkCosiSign  = 4;
+    bytes       KblkCosiAggr  = 5;
+    //FIXME
+    //Bitmap??
+}
+
+message PoWHdr {
+    bytes     PKblkHash  = 1;
+    uint64   Difficulty = 2;
+    uint64    Timestamp    = 3;
+    bytes   Worker     = 4;
+    uint64   Nonce      = 5;
+    bytes     mixHash    = 6;
+}
+
+message PoW {
+    PoWHdr      ph    = 1;
+    bytes       sig   = 2;
+}
+
+message KeyBlockHdr {
+    uint32    Version      = 1;
+    bytes     PKblkHash    = 2;
+    uint64    Timestamp    = 3;
+    //bytes number
+}
+
+message KeyBlock {
+    KeyBlockHdr kbh          = 1;
+    bytes       KblkCosiSign = 2;
+    bytes       KblkCosiAggr = 3;
+    uint64      NumPow       = 4;
+    repeated PoW Pows        = 5;
+}
+

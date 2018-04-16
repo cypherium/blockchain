@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/cypherium/blockchain/blockchain"
-	"github.com/cypherium/blockchain/cypherium"
+	"github.com/blockchain/blockchain"
+	"github.com/blockchain/cypherium"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"

@@ -25,21 +25,21 @@ the script from there:
 ```bash
 cd ~
 mkdir myconodes
-$(go env GOPATH)/src/github.com/cypherium/blockchain/conode/run_conode.sh local 3
+$(go env GOPATH)/src/github.com/cypherium_private/migration/conode/run_conode.sh local 3
 ```
 
 This will create three nodes and configure them with default values, then run
 them in background. To check if they're running correctly, use:
 
 ```bash
-$(go env GOPATH)/src/github.com/cypherium/blockchain/conode/run_conode.sh check
+$(go env GOPATH)/src/github.com/cypherium_private/migration/conode/run_conode.sh check
 ```
 
 If you need some debugging information, you can add another argument to print
 few (1), reasonable (3) or lots (5) information:
 
 ```bash
-$(go env GOPATH)/src/github.com/cypherium/blockchain/conode/run_conode.sh local 3 3
+$(go env GOPATH)/src/github.com/cypherium_private/migration/conode/run_conode.sh local 3 3
 ```
 
 The file `public.toml` contains the definition of all nodes that are being run.
@@ -49,7 +49,7 @@ The file `public.toml` contains the definition of all nodes that are being run.
 If you have a public server and want to run a node on it, simply use:
 
 ```bash
-$(go env GOPATH)/src/github.com/cypherium/blockchain/conode/run_conode.sh public
+$(go env GOPATH)/src/github.com/cypherium_private/migration/conode/run_conode.sh public
 ```
 
 The first time this runs it will ask you a couple of questions and verify if

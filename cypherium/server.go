@@ -3,14 +3,15 @@ package cypherium
 import (
 	"sync"
 
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	"github.com/blockchain/blockchain"
+	//"github.com/blockchain/blockchain/blkparser"
 	"github.com/dedis/onet/log"
 )
 
 // BlockServer is a struct where Client can connect and that instantiate cypherium
 // protocols when needed.
 type BlockServer interface {
-	AddTransaction(blkparser.Tx)
+	AddTransaction(blockchain.STransaction)
 	Instantiate(p *TemplateProtocol) (*TemplateProtocol, error)
 }
 
@@ -20,7 +21,7 @@ type BlockServer interface {
 // only the root participates to the creation of the block.
 type Server struct {
 	// transactions pool where all the incoming transactions are stored
-	transactions []blkparser.Tx
+	transactions []blockchain.STransaction
 	// lock associated
 	transactionLock sync.Mutex
 	// how many transactions should we give to an instance
@@ -32,9 +33,9 @@ type Server struct {
 	blockSignatureChan chan BlockSignature
 	// enoughBlock signals the server we have enough
 	// no comments..
-	transactionChan chan blkparser.Tx
+	transactionChan chan blockchain.STransaction
 	requestChan     chan bool
-	responseChan    chan []blkparser.Tx
+	responseChan    chan []blockchain.STransaction
 }
 
 // NewCypheriumServer returns a new fresh CypheriumServer. It must be given the blockSize in order
@@ -45,16 +46,16 @@ func NewCypheriumServer(blockSize int, timeOutMs uint64, fail uint) *Server {
 		timeOutMs:          timeOutMs,
 		fail:               fail,
 		blockSignatureChan: make(chan BlockSignature),
-		transactionChan:    make(chan blkparser.Tx),
+		transactionChan:    make(chan blockchain.STransaction),
 		requestChan:        make(chan bool),
-		responseChan:       make(chan []blkparser.Tx),
+		responseChan:       make(chan []blockchain.STransaction),
 	}
 	go s.listenEnoughBlocks()
 	return s
 }
 
 // AddTransaction add a new transactions to the list of transactions to commit
-func (s *Server) AddTransaction(tr blkparser.Tx) {
+func (s *Server) AddTransaction(tr blockchain.STransaction) {
 	s.transactionChan <- tr
 }
 
@@ -69,6 +70,7 @@ func (s *Server) ListenClientTransactions() {
 func (s *Server) Instantiate(p *TemplateProtocol) (*TemplateProtocol, error) {
 	// wait until we have enough blocks
 	currTransactions := s.WaitEnoughBlocks()
+	//fmt.Printf("Cypherium instantiate: %+v\n", currTransactions)
 	log.Lvl2("Instantiate cypherium Round with", len(currTransactions), "transactions")
 	pi, err := NewCypheriumRootProtocol(p, currTransactions, s.timeOutMs, s.fail)
 
@@ -87,7 +89,7 @@ func (s *Server) onDoneSign(blk BlockSignature) {
 
 // WaitEnoughBlocks is called to wait on the server until it has enough
 // transactions to make a block
-func (s *Server) WaitEnoughBlocks() []blkparser.Tx {
+func (s *Server) WaitEnoughBlocks() []blockchain.STransaction {
 	s.requestChan <- true
 	transactions := <-s.responseChan
 	return transactions
@@ -95,7 +97,7 @@ func (s *Server) WaitEnoughBlocks() []blkparser.Tx {
 
 func (s *Server) listenEnoughBlocks() {
 	// TODO the server should have a transaction pool instead:
-	var transactions []blkparser.Tx
+	var transactions []blockchain.STransaction
 	var want bool
 	for {
 		select {

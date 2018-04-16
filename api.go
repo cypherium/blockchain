@@ -9,7 +9,7 @@ This part of the service runs on the client or the app.
 */
 
 import (
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	"github.com/blockchain/blockchain"
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -62,7 +62,7 @@ func (c *Client) Count(si *network.ServerIdentity) (int, error) {
 // via the code in the service package.
 //
 // Send will return the result status to run the protocol.
-func (c *Client) Send(r *onet.Roster, transactions []blkparser.Tx) (*TransReply, error) {
+func (c *Client) Send(r *onet.Roster, transactions []blockchain.STransaction) (*TransReply, error) {
 	dst := r.RandomServerIdentity()
 	log.Lvl4("Sending message to", dst)
 	reply := &TransReply{}

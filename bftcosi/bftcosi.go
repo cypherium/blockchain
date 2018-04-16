@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cypherium/blockchain/cosi/crypto"
+	"github.com/blockchain/cosi/crypto"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -642,6 +642,7 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 				}
 			case RoundCommit:
 				bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
+				// Same reasoning as in RoundPrepare.
 				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.tempCommitCommit) {
 					return nil
 				}
@@ -752,12 +753,14 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	// if we didn't get all the responses, add them to the exception
 	// 1, find children that are not in tempPrepareResponsePublics
 	// 2, for the missing ones, find the global index and then add it to the exception
+	log.Lvl1("STATUS!!!!", bft.Name(), bft.tempPrepareResponsePublics)
 	publicsMap := make(map[string]bool)
 	for _, p := range bft.tempPrepareResponsePublics {
 		publicsMap[p.String()] = true
 	}
 	for _, tn := range bft.Children() {
 		if !publicsMap[tn.ServerIdentity.Public.String()] {
+			log.Lvl1("WRONG!!!", bft.Name(), tn.ServerIdentity.Public.String(), bft.tempPrepareResponsePublics, publicsMap)
 			// We assume the server was also not available for the commitment
 			// so no need to subtract the commitment.
 			// Conversely, we cannot handle nodes which fail right

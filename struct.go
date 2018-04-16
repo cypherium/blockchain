@@ -5,7 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	"github.com/blockchain/blockchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 )
@@ -55,7 +55,7 @@ const ReadFirstNBlocks = 400
 // the result status.
 type Transaction struct {
 	Roster   *onet.Roster
-	TransMsg []blkparser.Tx
+	TransMsg []blockchain.STransaction
 }
 
 // TransReply return the result status.

@@ -1,23 +1,3 @@
-/*
- * Copyright (C) 2018 The Cypherium Blockchain authors
- *
- * This file is part of the Cypherium Blockchain library.
- *
- * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Cypherium Blockchain library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 package cypherium
 
 /*
@@ -36,15 +16,20 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/big"
 	"time"
 
-	"github.com/cypherium/blockchain/bftcosi"
-	"github.com/cypherium/blockchain/blockchain"
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	"github.com/blockchain/bftcosi"
+	"github.com/blockchain/blockchain"
+	"github.com/cvm"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/golang/protobuf/proto"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+	"golang.org/x/crypto/ed25519"
 )
 
 func init() {
@@ -101,10 +86,10 @@ type TemplateProtocol struct {
 	verifyBlockChan chan bool
 
 	//  block to pass up between the two rounds (prepare + commits)
-	tempBlock *blockchain.TrBlock
+	tempBlock *blockchain.TxBlock
 	// transactions is the slice of transactions that contains transactions
 	// coming from clients
-	transactions []blkparser.Tx
+	transactions []blockchain.STransaction
 	// last block computed
 	lastBlock string
 	// last key block computed
@@ -201,7 +186,7 @@ func NewProtocol(n *onet.TreeNodeInstance) (*TemplateProtocol, error) {
 
 // NewCypheriumRootProtocol returns a new Cypherium struct with the block to sign
 // that will be sent to all others nodes
-func NewCypheriumRootProtocol(p *TemplateProtocol, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*TemplateProtocol, error) {
+func NewCypheriumRootProtocol(p *TemplateProtocol, transactions []blockchain.STransaction, timeOutMs uint64, failMode uint) (*TemplateProtocol, error) {
 
 	// p, err := NewProtocol(n)
 	// if err != nil {
@@ -231,20 +216,88 @@ var counters = &Counters{}
 // Verify function that returns true if the length of the data is 1.
 func Verify(m []byte, d []byte) bool {
 
-	//call VerifyBlock
+	txb := new(blockchain.TxBlock)
+	if err := proto.Unmarshal(m, txb); err != nil {
+		log.Error("Verify: %s\n", err.Error())
+	}
 
-	// c, err := strconv.Atoi(string(d))
-	// log.ErrFatal(err)
-	// counter := counters.get(c)
-	// counter.Lock()
-	// counter.veriCount++
-	// log.Lvl4("Verification called", counter.veriCount, "times")
-	// counter.Unlock()
-	// if len(d) == 0 {
-	// 	log.Error("Didn't receive correct data")
-	// 	return false
-	// }
+	op := opt.Options{ErrorIfMissing: true, ReadOnly: true}
+	StateDB, err := leveldb.OpenFile("../app/mock_state_db", &op)
+	defer StateDB.Close()
+	if err != nil {
+		log.Errorf("Verify: %s\n", err.Error())
+	}
+
+	//fmt.Printf("Verify block: %+v\n", *txb)
+	stxs := txb.GetTbd().GetStx()
+	for i := 0; i < len(stxs); i++ {
+		sig := stxs[i].GetSenderSig()
+		tx := stxs[i].GetTx()
+		msg := []byte(tx.String())
+		pk := tx.GetSenderKey()
+		/* Verify the signature of the STransaction */
+		ok := ed25519.Verify(pk, msg, sig)
+		if ok == false {
+			//fmt.Printf("STx %d not valid\n", i)
+			log.Errorf("STx %d not valid\n", i)
+		} else {
+			log.Errorf("Verify: Signature verified\n", i)
+		}
+		/* Verify the Transaction */
+		recipient := tx.GetRecipient()
+		accMsh, err := StateDB.Get(recipient, nil)
+		if err != nil {
+			//TODO Create account
+			fmt.Printf("Verify: %s\n", err.Error())
+		}
+		account := new(blockchain.Account)
+		err = proto.Unmarshal(accMsh, account)
+		if err != nil {
+			log.Errorf("Verify: %d\n", err.Error())
+		}
+		if account.Type == 1 {
+			log.Errorf("Verify: balance manipulation not implemented\n")
+		} else {
+			contract := cvm.Contract{
+				Caller:   nil,
+				Self:     account.GetAddress(),
+				Code:     account.GetCodeHash(),
+				Input:    tx.GetData(),
+				Storage:  account.GetStgRoot(),
+				GasLimit: tx.GetAvailGas(),
+				GasPrice: new(big.Int).SetBytes(tx.GetGasPrice()),
+				Balance:  new(big.Int).SetBytes(account.GetBalance()),
+			}
+			fmt.Printf("Verify contract: %+v\n", contract)
+			cf := cvm.NewContractFrame(&contract, StateDB)
+			if err := cf.Execute(); err != nil {
+				log.Errorf("VM: %s\n", err.Error())
+			}
+		}
+		//fmt.Printf("Verify: Account type: %d, balance: %d\n", account.Type, account.Balance)
+	}
 	return true
+}
+
+// VerifyBlock is a simulation of a real verification block algorithm
+func VerifyBlock(block *blockchain.TxBlock, lastBlock, lastKeyBlock string, done chan bool) {
+	//We measure the average block verification delays is 174ms for an average
+	//block of 500kB.
+	//To simulate the verification cost of bigger blocks we multiply 174ms
+	//times the size/500*1024
+	b, _ := json.Marshal(block)
+	s := len(b)
+	var n time.Duration
+	n = time.Duration(s / (500 * 1024))
+	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
+	verified := true
+	// verification of the header
+	//verified := block.Header.Parent == lastBlock && block.Header.ParentKey == lastKeyBlock
+	//verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
+	//verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
+	// notify it
+	log.Lvl3("Verification of the block done =", verified)
+	done <- verified
 }
 
 // Start sends the Announce-message to all children
@@ -261,7 +314,8 @@ func (p *TemplateProtocol) Start() error {
 	pbftcosi, _ := p.CreateProtocol(BFTCoSiProtocolName, p.Tree())
 
 	p.pbftcosi = pbftcosi.(*bftcosi.ProtocolBFTCoSi)
-	marshalled, err := json.Marshal(p.tempBlock)
+	//marshalled, err := json.Marshal(p.tempBlock)
+	marshalled, err := proto.Marshal(p.tempBlock)
 	if err != nil {
 		return err
 	}
@@ -380,36 +434,17 @@ func (p *TemplateProtocol) HandleReply(reply []StructReply) error {
 	return nil
 }
 
-// VerifyBlock is a simulation of a real verification block algorithm
-func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
-	//We measure the average block verification delays is 174ms for an average
-	//block of 500kB.
-	//To simulate the verification cost of bigger blocks we multiply 174ms
-	//times the size/500*1024
-	b, _ := json.Marshal(block)
-	s := len(b)
-	var n time.Duration
-	n = time.Duration(s / (500 * 1024))
-	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
-	// verification of the header
-	verified := block.Header.Parent == lastBlock && block.Header.ParentKey == lastKeyBlock
-	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
-	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
-	// notify it
-	log.Lvl3("Verification of the block done =", verified)
-	done <- verified
-}
-
 // GetBlock returns the next block available from the transaction pool.
-func GetBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
+func GetBlock(transactions []blockchain.STransaction, lastBlock, lastKeyBlock string) (*blockchain.TxBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
 
-	trlist := blockchain.NewTransactionList(transactions, len(transactions))
-	header := blockchain.NewHeader(trlist, lastBlock, lastKeyBlock)
-	trblock := blockchain.NewTrBlock(trlist, header)
-	return trblock, nil
+	//fmt.Printf("Cypherium GetBlock: %+v\n", transactions)
+	trlist := blockchain.NewTxBlockData(transactions, len(transactions))
+	header := blockchain.NewHeader(lastBlock, lastKeyBlock)
+	txblock := blockchain.NewTxBlock(trlist, header)
+	return txblock, nil
 }
 
 // RegisterOnDone registers a callback to call when the byzcoin protocols has
