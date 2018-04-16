@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	//"github.com/blockchain/blockchain/blkparser"
+	//common "github.com/blockchain/common"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/log"
@@ -15,7 +16,7 @@ type MessageType int
 type SeqNo byte
 
 type TransactionAnnouncment struct {
-	Val blkparser.Tx // Trasaction to be included in a block
+	Val STransaction // Trasaction to be included in a block
 }
 
 // NOTE: In order to decode correctly the proof, we need to the get the suite
@@ -25,7 +26,7 @@ type BlockReply struct {
 	SuiteStr      string
 	Timestamp     int64        // The timestamp requested for the block to prove its ordering
 	BlockLen      int          // Length of Block
-	Block         Block        // The Block including a number of transactions
+	Block         TxBlock      // The Block including a number of transactions
 	MerkleRoot    []byte       // root of the merkle tree
 	PrfLen        int          // Length of proof
 	Prf           Proof        // Merkle proof of value

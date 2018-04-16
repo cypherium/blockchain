@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"errors"
+	//"fmt"
 	"sync"
 
-	"github.com/cypherium/blockchain"
-	"github.com/cypherium/blockchain/cypherium"
-	"github.com/cypherium/blockchain/protocol"
+	"github.com/blockchain"
+	"github.com/blockchain/cypherium"
+	"github.com/blockchain/protocol"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -62,6 +63,7 @@ func (s *Service) Send(req *template.Transaction) (*template.TransReply, error) 
 		return nil, errors.New("couldn't create tree")
 	}
 
+	//fmt.Printf("Service.go: %+v\n", req.TransMsg)
 	for _, tr := range req.TransMsg {
 		// "send" transaction to server (we skip tcp connection on purpose here)
 		s.srv.AddTransaction(tr)

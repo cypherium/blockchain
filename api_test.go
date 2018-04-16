@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	// We need to include the service so it is started.
-	"github.com/cypherium/blockchain"
-	_ "github.com/cypherium/blockchain/service"
+	"github.com/blockchain"
+	_ "github.com/blockchain/service"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

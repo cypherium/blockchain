@@ -117,7 +117,9 @@ runLocal(){
 	done
 
 	killall -9 conode || true
-	go install $TAGS $pkg/conode
+	go build $pkg/conode
+	cp conode $GOBIN
+	rm ./conode
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do

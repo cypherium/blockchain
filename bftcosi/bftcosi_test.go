@@ -46,12 +46,13 @@ func (co *Counters) get(i int) *Counter {
 var counters = &Counters{}
 var cMux sync.Mutex
 
-// func TestMain(m *testing.M) {
-// 	log.MainTest(m)
-// }
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
 func TestBftCoSi(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSi"
+	log.SetDebugVisible(5)
 	log.Lvl1("TestBftCoSi")
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
@@ -193,7 +194,7 @@ func TestNodeFailure(t *testing.T) {
 }
 
 func runProtocol(t *testing.T, name string, refuseCount int) {
-	for _, nbrHosts := range []int{3} {
+	for _, nbrHosts := range []int{3, 5, 7, 15} {
 		runProtocolOnce(t, nbrHosts, name, refuseCount, true)
 	}
 }
@@ -231,7 +232,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	counter := &Counter{refuseCount: refuseCount}
 	counters.add(counter)
 	root.Data = []byte(strconv.Itoa(counters.size() - 1))
-	log.Lvl1("Added counter", counters.size()-1, refuseCount)
+	log.Lvl1("Added counter", counters.size()-1, refuseCount, counters.size(), root.Data)
 	cMux.Unlock()
 	log.ErrFatal(err)
 	// function that will be called when protocol is finished by the root
@@ -269,6 +270,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 			return fmt.Errorf("%s: Shouldn't have succeeded for %d hosts, but signed for count: %d",
 				root.Name(), nbrHosts, refuseCount)
 		}
+		log.Lvl1("%s: Verification succeed", root.Name(), sig)
 	case <-time.After(wait):
 		log.Lvl1("Going to break because of timeout")
 		return errors.New("Waited " + wait.String() + " for BFTCoSi to finish ...")
@@ -283,7 +285,7 @@ func verify(m []byte, d []byte) bool {
 	counter := counters.get(c)
 	counter.Lock()
 	counter.veriCount++
-	log.Lvl4("Verification called", counter.veriCount, "times")
+	log.Lvl4("Verification called", counter.veriCount, "times", d)
 	counter.Unlock()
 	if len(d) == 0 {
 		log.Error("Didn't receive correct data")

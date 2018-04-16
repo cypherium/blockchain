@@ -1,7 +1,23 @@
 /*
-* This is a template for creating an app. It only has one command which
-* prints out the name of the app.
+ * Copyright (C) 2018 The Cypherium Blockchain authors
+ *
+ * This file is part of the Cypherium Blockchain library.
+ *
+ * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The Cypherium Blockchain library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
+ *
  */
+
 package main
 
 import (
@@ -10,9 +26,9 @@ import (
 	"os"
 	"strconv"
 
-	template "github.com/cypherium/blockchain"
-	"github.com/cypherium/blockchain/blockchain"
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	template "github.com/blockchain"
+	"github.com/blockchain/blockchain"
+	"github.com/blockchain/blockchain/blkparser"
 
 	"github.com/dedis/onet/app"
 
@@ -110,17 +126,18 @@ func sendTransaction(c *cli.Context) error {
 	if c.NArg() != 3 {
 		log.Fatal("Please give the dir as argument,where to save the blocks and give the transactions number as second argument")
 	}
-	dir := c.Args().Get(1)
+	//dir := c.Args().Get(1)
 	nTxs, err := strconv.Atoi(c.Args().Get(2))
 	group := readGroup(c)
 	client := template.NewClient()
-	transactions, err := getTransactions(dir, nTxs)
+	//transactions, err := getTransactions(dir, nTxs)
+	transactions := GetStxs(nTxs)
 	if err != nil {
 		return err
 	}
 	resp, err := client.Send(group.Roster, transactions[:nTxs])
 	if err != nil {
-		return errors.New("When asking the time: " + err.Error())
+		return errors.New("When asking the transaction: " + err.Error())
 	}
 	log.Infof("Children: %d - Time spent: %f.send result:%v", resp.Children, resp.Time, resp.Status)
 	return nil
@@ -153,9 +170,6 @@ func cmdCounter(c *cli.Context) error {
 }
 
 func readGroup(c *cli.Context) *app.Group {
-	// if c.NArg() != 1 {
-	// 	log.Fatal("Please give the group-file as argument")
-	// }
 	name := c.Args().First()
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
