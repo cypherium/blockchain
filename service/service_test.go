@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/blockchain"
+	"github.com/cypherium_private/mvp"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

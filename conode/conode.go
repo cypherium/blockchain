@@ -24,7 +24,7 @@ import (
 
 	// Import your service:
 	// Here you can import any other needed service for your conode.
-	_ "github.com/blockchain/service"
+	_ "github.com/cypherium_private/mvp/service"
 	// For example, if your service needs cosi available in the server
 	// as well, uncomment this:
 )

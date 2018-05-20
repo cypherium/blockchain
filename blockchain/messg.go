@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
-	//"github.com/blockchain/blockchain/blkparser"
-	//common "github.com/blockchain/common"
+	//"github.com/cypherium_private/mvp/blockchain/blkparser"
+	//common "github.com/cypherium_private/mvp/common"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/log"

@@ -1,24 +1,14 @@
-/*
- * Copyright (C) 2018 The Cypherium Blockchain authors
- *
- * This file is part of the Cypherium Blockchain library.
- *
- * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Cypherium Blockchain library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 package cypherium
+
+/*
+The `NewProtocol` method is used to define the protocol and to register
+the handlers that will be called if a certain type of message is received.
+The handlers will be treated according to their signature.
+
+The protocol-file defines the actions that the protocol needs to do in each
+step. The root-node will call the `Start`-method of the protocol. Each
+node will only use the `Handle`-methods, and not call `Start` again.
+*/
 
 import (
 	"crypto/sha256"
@@ -29,9 +19,9 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/blockchain/bftcosi"
-	"github.com/blockchain/blockchain"
-	"github.com/cvm"
+	"github.com/cypherium_private/cvm"
+	"github.com/cypherium_private/mvp/bftcosi"
+	"github.com/cypherium_private/mvp/blockchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -153,6 +143,8 @@ type TemplateProtocol struct {
 	pbftcosi *bftcosi.ProtocolBFTCoSi
 	//can use for test log
 	ChildCount chan int
+
+	Res chan int
 }
 
 // Check that *TemplateProtocol implements onet.ProtocolInstance
@@ -180,6 +172,7 @@ func NewProtocol(n *onet.TreeNodeInstance) (*TemplateProtocol, error) {
 		viewChangeThreshold: int(math.Ceil(float64(len(n.Tree().List())) * 2.0 / 3.0)),
 
 		ChildCount: make(chan int),
+		Res:        make(chan int),
 	}
 
 	for _, handler := range []interface{}{t.HandleAnnounce, t.HandleReply} {
@@ -345,23 +338,19 @@ func (p *TemplateProtocol) Start() error {
 	select {
 	case <-p.doneSigning:
 		log.Lvl2("Protocol done")
-		// counter.Lock()
-		// if counter.veriCount != nbrHosts-killCount {
-		// 	return errors.New("each host should have called verification")
-		// }
-		// // if assert refuses we don't care for unlocking (t.Refuse)
-		// counter.Unlock()
 		sig := p.pbftcosi.Signature()
 		err := sig.Verify(p.pbftcosi.Suite(), p.pbftcosi.Roster().Publics())
 		if err != nil {
-			return fmt.Errorf("%s Verification of the signature refused: %s - %+v", p.pbftcosi.Name(), err.Error(), sig.Sig)
+			log.Errorf("%s Verification of the signature refused: %s - %+v", p.pbftcosi.Name(), err.Error(), sig.Sig)
+			p.Res <- PBFT_VERIFICATION_REFUSED
 		}
 		if err == nil {
 			log.Lvl1("%s: Verification succeed", p.pbftcosi.Name(), sig)
+			p.Res <- PBFT_OK
 		}
 	case <-time.After(wait):
-		log.Lvl1("Going to break because of timeout")
-		return errors.New("Waited " + wait.String() + " for BFTCoSi to finish ...")
+		log.Lvl1("Going to break because of timeout", "Waited ", wait.String(), " for BFTCoSi to finish ...")
+		p.Res <- PBFT_TIMEOUT
 	}
 
 	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
@@ -441,6 +430,7 @@ func (p *TemplateProtocol) HandleReply(reply []StructReply) error {
 	}
 	log.Lvl3("Root-node is done - nbr of children found:", children)
 	p.ChildCount <- children
+	p.Res <- PBFT_OK
 	return nil
 }
 

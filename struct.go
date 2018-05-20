@@ -5,7 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"github.com/blockchain/blockchain"
+	"github.com/cypherium_private/mvp/blockchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 )
@@ -62,5 +62,5 @@ type Transaction struct {
 type TransReply struct {
 	Time     float64
 	Children int
-	Status   bool
+	Status   int
 }

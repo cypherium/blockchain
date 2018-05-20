@@ -14,7 +14,7 @@ import (
 
 	"encoding/hex"
 
-	"github.com/blockchain/blockchain/blkparser"
+	"github.com/cypherium_private/mvp/blockchain/blkparser"
 	"github.com/dedis/onet/log"
 )
 

@@ -1,23 +1,4 @@
-/*
- * Copyright (C) 2018 The Cypherium Blockchain authors
- *
- * This file is part of the Cypherium Blockchain library.
- *
- * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Cypherium Blockchain library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
+// Bitcoin-blockchain specific functions.
 package blockchain
 
 import (
@@ -33,6 +14,20 @@ import (
 	//"github.com/dedis/onet/log"
 )
 
+/*
+type Block struct {
+	Magic      [4]byte
+	BlockSize  uint32
+	HeaderHash string
+	*Header
+	TransactionList
+}
+
+type TrBlock struct {
+	Block
+}
+*/
+
 func (tr *TxBlock) MarshalBinary() ([]byte, error) {
 	return proto.Marshal(tr)
 }
@@ -43,6 +38,14 @@ func (tr *TxBlock) HashSum() []byte {
 	TxSha := sha3.Sum256([]byte(TxStr))
 	return TxSha[:]
 }
+
+//type Header struct {
+//	MerkleRoot string
+//	Parent     string
+//	ParentKey  string
+//	PublicKey  string
+//	LeaderId   net.IP
+//}
 
 // HashSum returns a hash representation of the header
 func (h *TxBlockHdr) HashSum() []byte {
@@ -99,6 +102,19 @@ func NewTxBlockData(transactions []STransaction, cnt int) *TxBlockData {
 	return tbd
 }
 
+/*
+func HashRootTransactions(transactions TxBlockData) string {
+	var hashes []HashID
+
+	for _, t := range transactions.Stx {
+		temp, _ := hex.DecodeString(t.Hash)
+		hashes = append(hashes, temp)
+	}
+	out, _ := ProofTree(sha256.New, hashes)
+	return hex.EncodeToString(out)
+}
+*/
+
 func (txb *TxBlock) Hash(h *TxBlockHdr) (res []byte) {
 	HStr := h.String()
 	HSha := sha3.Sum256([]byte(HStr))
@@ -107,3 +123,13 @@ func (txb *TxBlock) Hash(h *TxBlockHdr) (res []byte) {
 	//return HashHeader(h)
 
 }
+
+//func HashHeader(h *Header) string {
+//	data := fmt.Sprintf("%v", h)
+//	sha := sha256.New()
+//	if _, err := sha.Write([]byte(data)); err != nil {
+//		log.Error("Couldn't hash header:", err)
+//	}
+//	hash := sha.Sum(nil)
+//	return hex.EncodeToString(hash)
+//}

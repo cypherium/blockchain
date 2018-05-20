@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blockchain/protocol"
+	"github.com/cypherium_private/mvp/protocol"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

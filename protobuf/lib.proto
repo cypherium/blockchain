@@ -1,0 +1,12 @@
+syntax="proto3";
+package stream;
+
+message TransactionMock {
+    uint32     Version   = 1;
+    bytes     SenderKey = 3;
+    bytes    Recipient = 4;
+    bytes     Quantity  = 5;
+    bytes      Data      = 6;
+    uint64     AvailGas  = 7;
+    bytes     GasPrice  = 8;
+}

@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/blockchain/cosi/crypto"
+	"github.com/cypherium_private/mvp/cosi/crypto"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

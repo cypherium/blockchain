@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blockchain/bftcosi"
-	"github.com/blockchain/cypherium"
+	"github.com/cypherium_private/mvp/bftcosi"
+	"github.com/cypherium_private/mvp/cypherium"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

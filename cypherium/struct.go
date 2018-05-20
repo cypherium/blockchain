@@ -10,7 +10,7 @@ so that it can find out who sent the message.
 import (
 	"sync"
 
-	"github.com/blockchain/blockchain"
+	"github.com/cypherium_private/mvp/blockchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 )
@@ -46,6 +46,13 @@ const CypheriumProtocolName = "CypheriumProtocol"
 
 // BFTCoSiProtocolName can be used in cypherium protocol.
 const BFTCoSiProtocolName = "BFTCoSiProtocol"
+
+// Result type of the PBFT_COSI protocol
+const (
+	PBFT_OK int = iota
+	PBFT_TIMEOUT
+	PBFT_VERIFICATION_REFUSED
+)
 
 // Announce is used to pass a message to all children.
 type Announce struct {

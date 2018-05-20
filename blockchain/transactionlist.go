@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 
-	"github.com/blockchain/blockchain/blkparser"
+	"github.com/cypherium_private/mvp/blockchain/blkparser"
 	"github.com/dedis/onet/log"
 )
 

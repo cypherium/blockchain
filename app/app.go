@@ -1,23 +1,7 @@
 /*
- * Copyright (C) 2018 The Cypherium Blockchain authors
- *
- * This file is part of the Cypherium Blockchain library.
- *
- * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Cypherium Blockchain library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
- *
+* This is a template for creating an app. It only has one command which
+* prints out the name of the app.
  */
-
 package main
 
 import (
@@ -26,9 +10,9 @@ import (
 	"os"
 	"strconv"
 
-	template "github.com/blockchain"
-	"github.com/blockchain/blockchain"
-	"github.com/blockchain/blockchain/blkparser"
+	template "github.com/cypherium_private/mvp"
+	"github.com/cypherium_private/mvp/blockchain"
+	"github.com/cypherium_private/mvp/blockchain/blkparser"
 
 	"github.com/dedis/onet/app"
 
@@ -123,11 +107,10 @@ func getTransactions(blocksPath string, nTxs int) ([]blkparser.Tx, error) {
 //sendTransaction send one transactions,return the result
 func sendTransaction(c *cli.Context) error {
 	log.Info("Send command")
-	if c.NArg() != 3 {
-		log.Fatal("Please give the dir as argument,where to save the blocks and give the transactions number as second argument")
+	if c.NArg() != 2 {
+		log.Fatal("Please give the public.toml file and give the transactions number as second argument")
 	}
-	//dir := c.Args().Get(1)
-	nTxs, err := strconv.Atoi(c.Args().Get(2))
+	nTxs, err := strconv.Atoi(c.Args().Get(1))
 	group := readGroup(c)
 	client := template.NewClient()
 	//transactions, err := getTransactions(dir, nTxs)

@@ -12,9 +12,9 @@ import (
 	//"fmt"
 	"sync"
 
-	"github.com/blockchain"
-	"github.com/blockchain/cypherium"
-	"github.com/blockchain/protocol"
+	"github.com/cypherium_private/mvp"
+	"github.com/cypherium_private/mvp/cypherium"
+	"github.com/cypherium_private/mvp/protocol"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -85,12 +85,12 @@ func (s *Service) Send(req *template.Transaction) (*template.TransReply, error) 
 	}
 
 	start := time.Now()
-	pi.Start()
+	go pi.Start()
 	resp := &template.TransReply{
+		Status:   <-root.Res,
 		Children: <-root.ChildCount,
 	}
 	resp.Time = time.Now().Sub(start).Seconds()
-	resp.Status = true
 	return resp, nil
 }
 

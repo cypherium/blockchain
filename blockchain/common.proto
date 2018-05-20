@@ -25,6 +25,11 @@
 syntax="proto3";
 package blockchain;
 
+message BigInt {
+    bool neg = 1;
+    bytes abs = 2;
+}
+
 // Accounts
 message Account {
     uint32  Version = 1;
@@ -49,6 +54,27 @@ message Transaction {
 message STransaction {
     Transaction tx        = 1;
     bytes       SenderSig = 2;
+}
+
+message TransactionProto{
+    Txdata  data = 1;
+    bytes   hash = 2;
+    double  size  =3;
+    bytes   from = 4;    
+}
+
+message Txdata {
+    uint32    Version   = 1;
+    bytes     SenderKey = 2;
+    bytes     Recipient = 3;
+    BigInt    Amount    = 4;
+    bytes     Payload   = 5;
+    uint64    GasLimit  = 6;
+    bytes     Price     = 7;
+    uint64    AccountNonce = 8;
+    bytes     V         = 9;
+    bytes     R         = 10;
+    bytes     S         = 11;
 }
 
 message Coinbase {

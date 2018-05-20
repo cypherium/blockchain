@@ -1,38 +1,19 @@
-/*
- * Copyright (C) 2018 The Cypherium Blockchain authors
- *
- * This file is part of the Cypherium Blockchain library.
- *
- * The Cypherium Blockchain library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Cypherium Blockchain library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the Cypherium Blockchain library. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 package main
 
 import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/blockchain/blockchain"
+	"math/big"
+	mrand "math/rand"
+	"time"
+
+	"github.com/cypherium_private/mvp/blockchain"
 	"github.com/golang/protobuf/proto"
 	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/crypto/ed25519"
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
-	"math/big"
-	mrand "math/rand"
-	"time"
 )
 
 func init() {
@@ -46,6 +27,8 @@ func genAddr(cnt int) ([]blockchain.Address, []blockchain.PubKey, []blockchain.P
 
 	for i := 0; i < cnt; i++ {
 		pub, prv, err := ed25519.GenerateKey(rand.Reader)
+		fmt.Println("pub, prv,", pub, prv)
+		fmt.Println("pub, prv,", len(pub), len(prv))
 		if err == nil {
 			addrSha := sha3.Sum256(pub)
 			addr160 := ripemd160.New()
