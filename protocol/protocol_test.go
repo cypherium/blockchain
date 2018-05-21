@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cypherium/blockchain/protocol"
+	"github.com/cypherium_private/mvp/protocol"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -27,7 +27,8 @@ func TestMain(m *testing.M) {
 // Tests a 2, 5 and 13-node system. It is good practice to test different
 // sizes of trees to make sure your protocol is stable.
 func TestNode(t *testing.T) {
-	nodes := []int{2, 5, 13}
+	log.SetDebugVisible(5)
+	nodes := []int{15}
 	for _, nbrNodes := range nodes {
 		local := onet.NewLocalTest(tSuite)
 		_, _, tree := local.GenTree(nbrNodes, true)

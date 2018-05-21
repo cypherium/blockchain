@@ -14,7 +14,7 @@ import (
 
 	"encoding/hex"
 
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	"github.com/cypherium_private/mvp/blockchain/blkparser"
 	"github.com/dedis/onet/log"
 )
 
@@ -128,6 +128,7 @@ func DownloadBlock(dir string) (string, error) {
 // download it. Finally the block will be copied to the 'simul'-provided
 // directory for simulation.
 func EnsureBlockIsAvailable(dir string) error {
+	log.Lvl1("config dir:", dir)
 	tmpdir := "/tmp/byzcoin"
 	block := GetBlockName(tmpdir)
 	if block == "" {

@@ -10,9 +10,9 @@ import (
 	"os"
 	"strconv"
 
-	template "github.com/cypherium/blockchain"
-	"github.com/cypherium/blockchain/blockchain"
-	"github.com/cypherium/blockchain/blockchain/blkparser"
+	template "github.com/cypherium_private/mvp"
+	"github.com/cypherium_private/mvp/blockchain"
+	"github.com/cypherium_private/mvp/blockchain/blkparser"
 
 	"github.com/dedis/onet/app"
 
@@ -107,20 +107,20 @@ func getTransactions(blocksPath string, nTxs int) ([]blkparser.Tx, error) {
 //sendTransaction send one transactions,return the result
 func sendTransaction(c *cli.Context) error {
 	log.Info("Send command")
-	if c.NArg() != 3 {
-		log.Fatal("Please give the dir as argument,where to save the blocks and give the transactions number as second argument")
+	if c.NArg() != 2 {
+		log.Fatal("Please give the public.toml file and give the transactions number as second argument")
 	}
-	dir := c.Args().Get(1)
-	nTxs, err := strconv.Atoi(c.Args().Get(2))
+	nTxs, err := strconv.Atoi(c.Args().Get(1))
 	group := readGroup(c)
 	client := template.NewClient()
-	transactions, err := getTransactions(dir, nTxs)
+	//transactions, err := getTransactions(dir, nTxs)
+	transactions := GetStxs(nTxs)
 	if err != nil {
 		return err
 	}
 	resp, err := client.Send(group.Roster, transactions[:nTxs])
 	if err != nil {
-		return errors.New("When asking the time: " + err.Error())
+		return errors.New("When asking the transaction: " + err.Error())
 	}
 	log.Infof("Children: %d - Time spent: %f.send result:%v", resp.Children, resp.Time, resp.Status)
 	return nil
@@ -153,9 +153,6 @@ func cmdCounter(c *cli.Context) error {
 }
 
 func readGroup(c *cli.Context) *app.Group {
-	// if c.NArg() != 1 {
-	// 	log.Fatal("Please give the group-file as argument")
-	// }
 	name := c.Args().First()
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")

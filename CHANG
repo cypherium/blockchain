@@ -1,0 +1,24 @@
+1. /Users/lwq/go/src/gopkg.in/dedis/crypto.v0/suites/list.go 中的type Suites map[string]abstract.Suite 和
+/Users/lwq/go/src/github.com/dedis/kyber/suites/suites.go 定义的不一样了
+
+// Suite is the sum of all suites mix-ins in Kyber.
+type Suite interface {
+	kyber.Encoding
+	kyber.Group
+	kyber.HashFactory
+	kyber.XOFFactory
+	kyber.Random
+}
+
+var suites = map[string]Suite{}
+
+
+
+2.cosi
+
+
+3.abstract
+
+4.suites
+
+5.byzcoin 
